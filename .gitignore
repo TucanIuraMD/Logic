@@ -1,0 +1,54 @@
+# ---- Sensitive / large / derived material (never commit) ----
+# databases, dumps, backups
+db/
+*.sql
+*.bak
+*.dump
+*.binlog
+backup_*/
+
+# original/commercial Windows material, archives, audit
+Win_App/
+OriginalLinux/
+_audit/
+*.zip
+*.rar
+
+# secrets, keys, credentials, local overrides
+*.key
+*.pem
+*.hex
+*.pfx
+*.p12
+.env
+config.local.*
+config.override.*
+credentials*
+*secret*
+*credential*
+
+# binary artifacts / working dirs
+MonoDebugTemp/
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+*.mdb
+*.new
+_originals/
+
+# logs, temp, crash
+logs/
+*.log
+*.tmp
+*.json.crash
+mono_crash*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# misc runtime leftovers (Windows-path debug files)
+c:\*
+C:\*

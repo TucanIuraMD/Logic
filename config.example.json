@@ -1,0 +1,32 @@
+{
+  "database": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "<DB_USER>",
+    "password": "<DB_PASSWORD>",
+    "name": "cashin",
+    "charset": "utf8mb4",
+    "options": "CharSet=utf8mb4;CheckParameters=false;"
+  },
+  "monitoring": {
+    "host": "<MONITORING_SERVER>",
+    "port": 333
+  },
+  "payment": {
+    "uri": "http://<PAYMENT_SERVER>:14111",
+    "useProxy": false,
+    "proxyHost": "<PROXY_HOST>",
+    "proxyPort": 14444
+  },
+  "ui": {
+    "design": "WebSocket",
+    "wsEndpoint": "127.0.0.1:8585"
+  },
+  "terminal": {
+    "pointId": "<POINT_ID>",
+    "clientId": "<CLIENT_ID>"
+  },
+  "logging": {
+    "logRequest": false
+  }
+}
