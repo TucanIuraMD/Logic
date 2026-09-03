@@ -1,45 +1,60 @@
-# Configuration (outline)
+# 14 — Configuration
 
-> Full configuration reference: see **WIKI-LLM/docs/** (CONFIGURATION,
-> DATABASE, DEVICES, DEPLOYMENT). This page is repository-scoped and contains
-> no secrets.
+## Источники конфигурации
 
-## Configuration sources
+| Источник | Приоритет | Что содержит |
+|----------|-----------|-------------|
+| MySQL `cashin.settings` | highest | настройки терминала: MonitorURL, MonitorPort, PaymentUri, PointId, ClientId, CashCodeName, PrinterName и др. |
+| `Setting.cs` defaults | default | значения по умолчанию, если в БД нет записи |
+| `.config` файлы | startup | `Logic.exe.config`, `DataBase.dll.config`, `MainLogic.dll.config` (assembly bindings, version) |
+| Hardcoded | runtime | `ConnectionStringHelper.cs` (DB connection string), `WebSocketControl.cs` (8585 ws://0.0.0.0), `COMPortWrapper.cs` (COM1, 19200, 866), `DeviceFolders.cs` (Windows paths) |
 
-| Source | Priority | Contents |
-|--------|----------|----------|
-| MySQL `cashin.settings` | highest | terminal settings: monitoring/payment endpoints, terminal ids, device names, flags |
-| Code defaults (`Setting.cs`) | fallback | default values when not present in DB |
-| `.config` files | startup | assembly binding redirects / framework |
-| compile-time values | runtime | DB connection string, WebSocket UI port, serial defaults |
+## Настройки MySQL (settings table)
 
-## Settings model
+| Name | Current value (test) | Production needed |
+|------|---------------------|-------------------|
+| MonitorURL | localhost | infra-assigned host |
+| MonitorPort | 333 | 333 |
+| PaymentUri | http://localhost:14111 | http://<payment-host>:14111 |
+| PointId | 0 | assigned per terminal |
+| ClientId | 011f336a-a6bb-11f1-9ecd-bc24110e87dd | unique per terminal |
+| SerialPoint | 1 | assigned |
+| ClientName | LogicTest | terminal name |
+| CashCodeName | Cup | Cup (kept) |
+| PrinterName | printer | printer (kept) |
+| Design | WebSocket | WebSocket (kiosk UI) |
+| ScreenSize | 1024x768 | kiosk resolution |
+| StartStep | MainMenu | MainMenu |
 
-Settings are key/value rows in the external MySQL database (`_name`, `_value`)
-grouped in sections, exposed to the application through `SqlSettingsProvider`
-(`IBP.Setting`). Key groups:
+Полный список: ~30 настроек (см. `Setting.cs`). Settings not in DB fall back to defaults.
 
-- **Network**: `MonitorURL`, `MonitorPort`, `PaymentUri`, `UseProxy`,
-  `ProxyName`, `ProxyPort`, `HttpTimeOut`.
-- **Terminal identity**: `PointId`, `ClientId`, `SerialPoint`,
-  `SerialClient`, `ClientName`.
-- **Devices**: `CashCodeName`, `PrinterName`, device parameters in
-  `properties4devices` (COM port, baud rate, parity, encoding).
-- **UI**: `Design` (WebSocket), `ScreenSize`, `StartStep`.
-- **Behaviour flags**: `LogRequest`, blocks, cheque options, etc.
+## Hardcoded значения (требуют пересборки для изменения)
 
-Values not present in the DB fall back to code defaults.
+| Значение | Где | Влияние |
+|----------|-----|---------|
+| `server=localhost;userid=<DB_USER>;password=<DB_PASSWORD>;database=cashin;CharSet=utf8mb4;CheckParameters=false;` | `ConnectionStringHelper.cs` (SqlSettingsProvider) | DB connection (пароль вшит) |
+| `<MONITORING_SERVER>` | Setting.cs — MonitorURL default | default мониторинга |
+| `333` | Setting.cs — MonitorPort default | порт мониторинга |
+| `http://<MONITORING_SERVER>:14111` | Setting.cs — PaymentUri default | default платежей |
+| `<PROXY_SERVER>` | Setting.cs — ProxyName default | default proxy |
+| `14444` | Setting.cs — ProxyPort default | порт proxy |
+| `ws://0.0.0.0:8585` | WebSocketControl.cs | WebSocket UI port |
+| `"\logs"` (backslash) | Logger.cs | log directory name |
+| `"\Devices\Printers"` etc. | DeviceFolders.cs | external device folders |
+| `COM1` / 19200 / 866 | COMPortWrapper.cs | serial defaults |
+| `C:\dabaseDLL_<date>.txt` | DAL.cs:52 | debug log path |
 
-## Security rules
+## Device configuration (MySQL)
 
-- Never store real credentials in committed files. Templates:
-  `config.example.env`, `config.example.json` (placeholders only).
-- The DB connection string is compile-time; align MySQL account with it or
-  rebuild (see `WIKI-LLM/docs/DATABASE.md`).
-- `LogRequest=false` in production (it would log full payment XML).
-- Use provider-issued RSA keys in production (see `WIKI-LLM/docs/DATABASE.md`).
+**Cup (CashCode → CCNet):** ComPort=/dev/ttyS0, BaudRate=9600, DataBits=8, Parity=None, StopBits=One, Encoding=866, CassetteCapacity=1000  
+**printer (Printer → Citizen PPU 700):** ComPort=/dev/ttyS1, BaudRate=19200, DataBits=8, Parity=None, StopBits=One, Encoding=866, PaperWidth=80, PrinterCodeTable=7
 
-## Local overrides
+## Production configuration model
 
-Copy `config.example.env` to `.env` (or `config.example.json` to
-`config.local.json`) and fill values. Such files are git-ignored.
+Единственный источник: MySQL `cashin.settings` + `devices`/`properties4devices` + `keys`.  
+Per-terminal provisioning: установить MonitorURL, PaymentUri, PointId, ClientId, заменить keys.
+
+## .config files (assembly bindings)
+
+- `Logic.exe.config`, `DataBase.dll.config`: `System.Buffers` binding redirect; `.NETFramework,Version=v4.6.1`
+- `MainLogic.dll.config`: version 4.2.5.3 (не влияет, т.к. MainLogic v7.0.0.0)
