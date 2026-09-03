@@ -13,6 +13,9 @@ OriginalLinux/
 _audit/
 *.zip
 *.rar
+Terminal.zip
+logiclinux-master*
+hw_acceptance/
 
 # secrets, keys, credentials, local overrides
 *.key
@@ -26,6 +29,17 @@ config.override.*
 credentials*
 *secret*
 *credential*
+.creds/
+.tunnel*
+*_tunnel*
+.ssh/
+*.ppk
+
+# cashin DB key table exports / dumps (production key material)
+cashin.keys
+cashin*.sql
+cashin*.bak
+final_cashin_backup*
 
 # binary artifacts / working dirs
 MonoDebugTemp/
